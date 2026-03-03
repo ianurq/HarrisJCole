@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harris's Exam Rewards</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --gold: #ffd700;
+    --green: #2ecc71;
+    --amber: #f39c12;
+    --red: #e74c3c;
+    --text: #e8e8f0;
+    --text-muted: #8888aa;
+    --maths-accent: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 1rem 1rem;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+
+  header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  header h1 span { color: var(--accent); }
+
+  header p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  /* ── Running total bar ── */
+  .total-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .total-bar .amount {
+    color: var(--gold);
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .total-bar .label { color: var(--text-muted); font-size: 0.8rem; font-weight: 400; }
+
+  /* ── Main content ── */
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  /* ── Section headings ── */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 1.25rem 0 0.6rem;
+    padding-left: 0.25rem;
+  }
+
+  /* ── Subject cards ── */
+  .subject-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: border-color 0.2s;
+  }
+
+  .subject-card.maths {
+    border-left: 3px solid var(--maths-accent);
+  }
+
+  .subject-card:has(.grade-select:not([value=""]).has-grade) {
+    border-color: var(--accent);
+  }
+
+  .subject-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .subject-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .subject-reward {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+    min-height: 1.1em;
+    transition: color 0.2s;
+  }
+
+  .subject-reward.earned { color: var(--green); font-weight: 600; }
+  .subject-reward.zero   { color: var(--text-muted); }
+
+  /* ── Grade selector ── */
+  .grade-select {
+    appearance: none;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.55rem 2rem 0.55rem 0.75rem;
+    cursor: pointer;
+    min-width: 130px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238888aa' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    transition: border-color 0.2s;
+  }
+
+  .grade-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .grade-select option { background: #1a1d27; }
+
+  /* Cash badge on the right */
+  .cash-badge {
+    font-size: 1.1rem;
+    font-weight: 800;
+    min-width: 3rem;
+    text-align: right;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+
+  .cash-badge.earned { color: var(--green); }
+  .cash-badge.zero   { color: var(--text-muted); }
+
+  /* ── Summary panel ── */
+  .summary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem;
+    margin-top: 1.5rem;
+  }
+
+  .summary-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+
+  .summary-row:last-child { border-bottom: none; }
+
+  .summary-row .lbl { color: var(--text-muted); }
+  .summary-row .val { font-weight: 700; }
+
+  .summary-row.total-row {
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--border);
+    border-bottom: none;
+    font-size: 1rem;
+  }
+
+  .summary-row.total-row .lbl { color: var(--text); font-weight: 600; }
+  .summary-row.total-row .val { color: var(--gold); font-size: 1.2rem; }
+
+  .cap-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  /* ── Concert ticket ── */
+  .ticket-panel {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.1rem 1.25rem;
+    margin-top: 0.75rem;
+    text-align: center;
+    transition: border-color 0.4s, background 0.4s;
+  }
+
+  .ticket-panel.unlocked {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #1a1d27 0%, #22201a 100%);
+  }
+
+  .ticket-panel.locked {
+    border-color: var(--border);
+    opacity: 0.7;
+  }
+
+  .ticket-icon {
+    font-size: 2.4rem;
+    display: block;
+    margin-bottom: 0.4rem;
+    filter: grayscale(1);
+    transition: filter 0.4s;
+  }
+
+  .ticket-panel.unlocked .ticket-icon { filter: grayscale(0); }
+
+  .ticket-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+
+  .ticket-panel.unlocked .ticket-title { color: var(--gold); }
+
+  .ticket-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .ticket-panel.unlocked .ticket-sub { color: var(--text); }
+
+  .ticket-condition {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    background: var(--surface2);
+    color: var(--text-muted);
+  }
+
+  .ticket-panel.unlocked .ticket-condition {
+    background: rgba(255,215,0,0.15);
+    color: var(--gold);
+  }
+
+  /* ── Grade reference card ── */
+  details {
+    margin-top: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  summary {
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    user-select: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '▾'; margin-left: auto; font-size: 0.75rem; }
+  details[open] summary::after { content: '▴'; }
+
+  .grade-ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .grade-ref-table th {
+    background: var(--surface2);
+    padding: 0.4rem 0.75rem;
+    text-align: left;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .grade-ref-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .grade-ref-table tr:last-child td { border-bottom: none; }
+  .grade-ref-table .grade-num { font-weight: 700; color: var(--accent); }
+  .grade-ref-table .maths-val { color: var(--maths-accent); font-weight: 600; }
+  .grade-ref-table .other-val { color: var(--accent2); font-weight: 600; }
+  .grade-ref-table .zero-val  { color: var(--text-muted); }
+
+  /* ── Reset button ── */
+  .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 1.25rem;
+    padding: 0.75rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .reset-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* ── Animations ── */
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  .pop { animation: pop 0.35s ease; }
+
+  /* ── J.Cole gif modal ── */
+  .gif-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .gif-overlay.show { display: flex; }
+
+  .gif-box {
+    background: #1a1d27;
+    border: 3px solid var(--gold);
+    border-radius: 18px;
+    padding: 1.25rem;
+    text-align: center;
+    max-width: 360px;
+    width: 100%;
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+  }
+
+  @keyframes bounceIn {
+    0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+    60%  { transform: scale(1.08) rotate(2deg); opacity: 1; }
+    80%  { transform: scale(0.96) rotate(-1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .gif-confetti {
+    font-size: 1.8rem;
+    letter-spacing: 0.2rem;
+    margin-bottom: 0.5rem;
+    animation: wiggle 0.6s ease infinite alternate;
+  }
+
+  @keyframes wiggle {
+    from { transform: rotate(-5deg) scale(1); }
+    to   { transform: rotate(5deg) scale(1.1); }
+  }
+
+  .gif-headline {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .gif-img {
+    width: 100%;
+    max-width: 280px;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto 1rem;
+    border: 2px solid var(--border);
+  }
+
+  .gif-close {
+    background: var(--gold);
+    border: none;
+    border-radius: 10px;
+    color: #111;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 0.65rem 1.75rem;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.03em;
+    transition: opacity 0.2s;
+  }
+
+  .gif-close:hover { opacity: 0.85; }
+
+  @media (max-width: 400px) {
+    .grade-select { min-width: 110px; font-size: 0.8rem; }
+    header h1 { font-size: 1.2rem; }
+    .total-bar .amount { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Harris' <span>Exam Rewards</span> 🎯</h1>
+  <p>enter your grades to see what you earn</p>
+  <div class="total-bar">
+    <span class="label">TOTAL CASH</span>
+    <span class="amount" id="header-total">£0</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="section-label">Mathematics</div>
+
+  <div class="subject-card maths" id="card-0">
+    <div class="subject-info">
+      <div class="subject-name">Mathematics</div>
+      <div class="subject-reward" id="reward-label-0">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-0" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-0">—</div>
+  </div>
+
+  <div class="section-label">Other Subjects <span class="cap-note">(capped at £360 combined)</span></div>
+
+  <!-- English -->
+  <div class="subject-card" id="card-1">
+    <div class="subject-info">
+      <div class="subject-name">English</div>
+      <div class="subject-reward" id="reward-label-1">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-1" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-1">—</div>
+  </div>
+
+  <!-- Business -->
+  <div class="subject-card" id="card-2">
+    <div class="subject-info">
+      <div class="subject-name">Business</div>
+      <div class="subject-reward" id="reward-label-2">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-2" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-2">—</div>
+  </div>
+
+  <!-- German -->
+  <div class="subject-card" id="card-3">
+    <div class="subject-info">
+      <div class="subject-name">German</div>
+      <div class="subject-reward" id="reward-label-3">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-3" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-3">—</div>
+  </div>
+
+  <!-- Graphic Communication -->
+  <div class="subject-card" id="card-4">
+    <div class="subject-info">
+      <div class="subject-name">Graphic Communication</div>
+      <div class="subject-reward" id="reward-label-4">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-4" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-4">—</div>
+  </div>
+
+  <!-- Health & Food Technology -->
+  <div class="subject-card" id="card-5">
+    <div class="subject-info">
+      <div class="subject-name">Health &amp; Food Technology</div>
+      <div class="subject-reward" id="reward-label-5">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-5" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-5">—</div>
+  </div>
+
+  <!-- Modern Studies -->
+  <div class="subject-card" id="card-6">
+    <div class="subject-info">
+      <div class="subject-name">Modern Studies</div>
+      <div class="subject-reward" id="reward-label-6">Select a grade to see reward</div>
+    </div>
+    <select class="grade-select" id="grade-6" onchange="update()">
+      <option value="">— Grade —</option>
+      <option value="1">1 · Upper A</option>
+      <option value="2">2 · Lower A</option>
+      <option value="3">3 · Upper B</option>
+      <option value="4">4 · Lower B</option>
+      <option value="5">5 · Upper C</option>
+      <option value="6">6 · Lower C</option>
+      <option value="7">7 · D</option>
+      <option value="8">8 · No Award</option>
+      <option value="9">9 · No Award</option>
+    </select>
+    <div class="cash-badge" id="cash-badge-6">—</div>
+  </div>
+
+  <!-- ── Summary ── -->
+  <div class="summary">
+    <div class="summary-title">💰 Breakdown</div>
+
+    <div class="summary-row">
+      <span class="lbl">Maths reward</span>
+      <span class="val" id="sum-maths">—</span>
+    </div>
+    <div class="summary-row">
+      <span class="lbl">Other subjects <span class="cap-note">(cap £360)</span></span>
+      <span class="val" id="sum-other">—</span>
+    </div>
+    <div class="summary-row total-row">
+      <span class="lbl">Total cash <span class="cap-note">(max £500)</span></span>
+      <span class="val" id="sum-total">£0</span>
+    </div>
+  </div>
+
+  <!-- ── Ticket ── -->
+  <div class="ticket-panel locked" id="ticket-panel">
+    <span class="ticket-icon" id="ticket-icon">🎫</span>
+    <div class="ticket-title" id="ticket-title">J. Cole Concert Ticket</div>
+    <div class="ticket-sub" id="ticket-sub">Worth £100</div>
+    <div class="ticket-condition" id="ticket-condition">Unlock by getting Maths grade 5 (Upper C) or better</div>
+  </div>
+
+  <!-- ── Grade reference ── -->
+  <details>
+    <summary>📊 Grade Reference &amp; Reward Bands</summary>
+    <table class="grade-ref-table">
+      <thead>
+        <tr>
+          <th>Grade</th>
+          <th>Band</th>
+          <th>%</th>
+          <th class="maths-val">Maths</th>
+          <th class="other-val">Others</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="grade-num">1</td><td>Upper A</td><td>85%+</td><td class="maths-val">£200</td><td class="other-val">£100</td></tr>
+        <tr><td class="grade-num">2</td><td>Lower A</td><td>70-84%</td><td class="maths-val">£150</td><td class="other-val">£75</td></tr>
+        <tr><td class="grade-num">3</td><td>Upper B</td><td>65-69%</td><td class="maths-val">£100</td><td class="other-val">£50</td></tr>
+        <tr><td class="grade-num">4</td><td>Lower B</td><td>60-64%</td><td class="maths-val">£75</td><td class="other-val">£40</td></tr>
+        <tr><td class="grade-num">5</td><td>Upper C</td><td>55-59%</td><td class="maths-val">£50</td><td class="other-val">£25</td></tr>
+        <tr><td class="grade-num">6</td><td>Lower C</td><td>50-54%</td><td class="zero-val">£0</td><td class="zero-val">£0</td></tr>
+        <tr><td class="grade-num">7</td><td>D</td><td>40-49%</td><td class="zero-val">£0</td><td class="zero-val">£0</td></tr>
+        <tr><td class="grade-num">8</td><td>No Award</td><td>30-39%</td><td class="zero-val">£0</td><td class="zero-val">£0</td></tr>
+        <tr><td class="grade-num">9</td><td>No Award</td><td>&lt;30%</td><td class="zero-val">£0</td><td class="zero-val">£0</td></tr>
+      </tbody>
+    </table>
+  </details>
+
+  <button class="reset-btn" onclick="resetAll()">↩ Reset all grades</button>
+
+</main>
+
+<!-- ── J.Cole gif popup ── -->
+<div class="gif-overlay" id="gif-overlay" onclick="closeGif()">
+  <div class="gif-box" onclick="event.stopPropagation()">
+    <div class="gif-confetti">🎉🎶🎉</div>
+    <div class="gif-headline">J. Cole ticket LOCKED IN! 🔥</div>
+    <img class="gif-img" id="gif-img" src="jcole.gif" alt="J. Cole celebration">
+    <button class="gif-close" onclick="closeGif()">💥The Fall-Off World Tour💥</button>
+  </div>
+</div>
+
+<script>
+// ── Gif modal ────────────────────────────────────────────────────────────────
+let wasTicketUnlocked = false;
+
+function closeGif() {
+  document.getElementById('gif-overlay').classList.remove('show');
+}
+
+// ── Reward logic (exact replica of spreadsheet) ──────────────────────────────
+
+const MATHS_REWARDS = { 1: 200, 2: 150, 3: 100, 4: 75, 5: 50 };
+const OTHER_REWARDS  = { 1: 100, 2: 75,  3: 50,  4: 40, 5: 25  };
+const OTHER_CAP      = 360;
+const CASH_CAP       = 500;
+const TICKET_VALUE   = 100;
+const TICKET_MATHS_THRESHOLD = 5;  // grade <= 5 unlocks ticket
+
+function mathsReward(g) {
+  return MATHS_REWARDS[g] ?? 0;
+}
+
+function otherReward(g) {
+  return OTHER_REWARDS[g] ?? 0;
+}
+
+// ── Grade label helpers ───────────────────────────────────────────────────────
+const GRADE_LABELS = {
+  1: 'Upper A', 2: 'Lower A', 3: 'Upper B', 4: 'Lower B', 5: 'Upper C',
+  6: 'Lower C', 7: 'D', 8: 'No Award', 9: 'No Award'
+};
+
+function fmt(n) { return n > 0 ? `+£${n}` : '£0'; }
+function fmtTotal(n) { return `£${n}`; }
+
+// ── Main update function ──────────────────────────────────────────────────────
+function update() {
+  const mathsGrade = parseInt(document.getElementById('grade-0').value) || null;
+
+  // Maths
+  const mathsCash = mathsGrade !== null ? mathsReward(mathsGrade) : 0;
+  updateCard(0, mathsGrade, mathsCash, true);
+
+  // Other subjects
+  let otherRawTotal = 0;
+  for (let i = 1; i <= 6; i++) {
+    const g = parseInt(document.getElementById(`grade-${i}`).value) || null;
+    const cash = g !== null ? otherReward(g) : 0;
+    otherRawTotal += cash;
+    updateCard(i, g, cash, false);
+  }
+
+  const otherCapped = Math.min(otherRawTotal, OTHER_CAP);
+  const totalCash   = Math.min(mathsCash + otherCapped, CASH_CAP);
+
+  // Ticket
+  const ticketUnlocked = mathsGrade !== null && mathsGrade <= TICKET_MATHS_THRESHOLD;
+
+  // Summary rows
+  const sumMaths = document.getElementById('sum-maths');
+  const sumOther = document.getElementById('sum-other');
+  const sumTotal = document.getElementById('sum-total');
+
+  sumMaths.textContent = mathsGrade !== null ? fmtTotal(mathsCash) : '—';
+  sumMaths.style.color = mathsCash > 0 ? 'var(--green)' : '';
+
+  if (otherRawTotal > 0 || Object.values([1,2,3,4,5,6].map(i =>
+    document.getElementById(`grade-${i}`).value)).some(v => v !== '')) {
+    sumOther.textContent = otherRawTotal > OTHER_CAP
+      ? `£${otherCapped} (capped from £${otherRawTotal})`
+      : fmtTotal(otherCapped);
+    sumOther.style.color = otherCapped > 0 ? 'var(--green)' : '';
+  } else {
+    sumOther.textContent = '—';
+    sumOther.style.color = '';
+  }
+
+  // Animate total if changed
+  const prevTotal = sumTotal.textContent;
+  const newTotal  = fmtTotal(totalCash);
+  sumTotal.textContent = newTotal;
+  sumTotal.style.color = totalCash > 0 ? 'var(--gold)' : '';
+
+  // Header running total
+  const headerTotal = document.getElementById('header-total');
+  if (headerTotal.textContent !== newTotal) {
+    headerTotal.textContent = newTotal;
+    headerTotal.classList.remove('pop');
+    void headerTotal.offsetWidth;
+    headerTotal.classList.add('pop');
+  }
+
+  // Ticket panel
+  updateTicket(ticketUnlocked, mathsGrade);
+}
+
+function updateCard(index, grade, cash, isMaths) {
+  const badge = document.getElementById(`cash-badge-${index}`);
+  const label = document.getElementById(`reward-label-${index}`);
+
+  if (grade === null) {
+    badge.textContent = '—';
+    badge.className   = 'cash-badge';
+    label.textContent = 'Select a grade to see reward';
+    label.className   = 'subject-reward';
+    return;
+  }
+
+  badge.textContent = `£${cash}`;
+  badge.className   = cash > 0 ? 'cash-badge earned' : 'cash-badge zero';
+
+  const bandName = GRADE_LABELS[grade] || '';
+  if (cash > 0) {
+    label.textContent = `Grade ${grade} · ${bandName} — £${cash} earned`;
+    label.className   = 'subject-reward earned';
+  } else {
+    label.textContent = `Grade ${grade} · ${bandName} — no reward`;
+    label.className   = 'subject-reward zero';
+  }
+}
+
+function updateTicket(unlocked, mathsGrade) {
+  const panel     = document.getElementById('ticket-panel');
+  const icon      = document.getElementById('ticket-icon');
+  const title     = document.getElementById('ticket-title');
+  const sub       = document.getElementById('ticket-sub');
+  const condition = document.getElementById('ticket-condition');
+
+  if (unlocked) {
+    panel.className       = 'ticket-panel unlocked';
+    icon.textContent      = '🎟️';
+    title.textContent     = '🎉 J. Cole Ticket — EARNED!';
+    sub.textContent       = '';
+    condition.textContent = `Maths grade ${mathsGrade} (${GRADE_LABELS[mathsGrade]}) — ticket unlocked ✓`;
+
+    // Show gif popup only on the moment of unlocking
+    if (!wasTicketUnlocked) {
+      // Restart gif by resetting src so it replays from the beginning
+      const gif = document.getElementById('gif-img');
+      const src = gif.src;
+      gif.src   = '';
+      gif.src   = src;
+      document.getElementById('gif-overlay').classList.add('show');
+    }
+  } else {
+    panel.className       = 'ticket-panel locked';
+    icon.textContent      = '🎫';
+    title.textContent     = 'J. Cole Concert Ticket';
+    sub.textContent       = `Worth £${TICKET_VALUE}`;
+    if (mathsGrade === null) {
+      condition.textContent = `Unlock by getting Maths grade 5 (Upper C) or better`;
+    } else {
+      condition.textContent = `Maths grade ${mathsGrade} (${GRADE_LABELS[mathsGrade]}) — need grade 5 or better`;
+    }
+  }
+
+  wasTicketUnlocked = unlocked;
+}
+
+function resetAll() {
+  for (let i = 0; i <= 6; i++) {
+    document.getElementById(`grade-${i}`).value = '';
+  }
+  update();
+}
+
+// Initialise
+update();
+</script>
+
+</body>
+</html>
